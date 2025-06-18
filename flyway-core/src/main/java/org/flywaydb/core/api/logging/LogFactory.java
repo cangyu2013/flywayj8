@@ -17,7 +17,6 @@ package org.flywaydb.core.api.logging;
 
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.internal.logging.EvolvingLog;
-import org.flywaydb.core.internal.logging.android.AndroidLogCreator;
 import org.flywaydb.core.internal.logging.apachecommons.ApacheCommonsLogCreator;
 import org.flywaydb.core.internal.logging.buffered.BufferedLogCreator;
 import org.flywaydb.core.internal.logging.javautil.JavaUtilLogCreator;
@@ -52,7 +51,7 @@ public class LogFactory {
      * Sets the LogCreator that will be used. This will effectively override Flyway's default LogCreator auto-detection
      * logic and force Flyway to always use this LogCreator regardless of which log libraries are present on the
      * classpath.
-     *
+     * <p>
      * This is primarily meant for integrating Flyway into environments with their own logging system (like Ant,
      * Gradle, Maven, ...). This ensures Flyway is a good citizen in those environments and sends its logs through the
      * expected pipeline.
@@ -129,9 +128,6 @@ public class LogFactory {
 
     private static LogCreator autoDetectLogCreator(ClassLoader classLoader, LogCreator fallbackLogCreator) {
         FeatureDetector featureDetector = new FeatureDetector(classLoader);
-        if (featureDetector.isAndroidAvailable()) {
-            return ClassUtils.instantiate(AndroidLogCreator.class.getName(), classLoader);
-        }
         if (featureDetector.isSlf4jAvailable()) {
             return ClassUtils.instantiate(Slf4jLogCreator.class.getName(), classLoader);
         }

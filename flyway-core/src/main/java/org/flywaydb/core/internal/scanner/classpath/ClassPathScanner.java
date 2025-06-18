@@ -23,8 +23,6 @@ import org.flywaydb.core.api.resource.LoadableResource;
 import org.flywaydb.core.internal.resource.classpath.ClassPathResource;
 import org.flywaydb.core.internal.scanner.LocationScannerCache;
 import org.flywaydb.core.internal.scanner.ResourceNameCache;
-import org.flywaydb.core.internal.scanner.classpath.jboss.JBossVFSv2UrlResolver;
-import org.flywaydb.core.internal.scanner.classpath.jboss.JBossVFSv3ClassPathLocationScanner;
 import org.flywaydb.core.internal.util.ClassUtils;
 import org.flywaydb.core.internal.util.FeatureDetector;
 import org.flywaydb.core.internal.util.Pair;
@@ -128,7 +126,7 @@ public class ClassPathScanner<I> implements ResourceAndClassScanner<I> {
         for (URL locationUrl : locationUrls) {
             LOG.debug("Scanning URL: " + locationUrl.toExternalForm());
 
-            UrlResolver urlResolver = createUrlResolver(locationUrl.getProtocol());
+            UrlResolver urlResolver = new DefaultUrlResolver();
             URL resolvedUrl = urlResolver.toStandardJavaUrl(locationUrl);
 
             String protocol = resolvedUrl.getProtocol();
@@ -268,20 +266,6 @@ public class ClassPathScanner<I> implements ResourceAndClassScanner<I> {
     }
 
     /**
-     * Creates an appropriate URL resolver scanner for this url protocol.
-     *
-     * @param protocol The protocol of the location url to scan.
-     * @return The url resolver for this protocol.
-     */
-    private UrlResolver createUrlResolver(String protocol) {
-        if (new FeatureDetector(classLoader).isJBossVFSv2Available() && protocol.startsWith("vfs")) {
-            return new JBossVFSv2UrlResolver();
-        }
-
-        return new DefaultUrlResolver();
-    }
-
-    /**
      * Creates an appropriate location scanner for this url protocol.
      *
      * @param protocol The protocol of the location url to scan.
@@ -308,12 +292,6 @@ public class ClassPathScanner<I> implements ResourceAndClassScanner<I> {
         }
 
         FeatureDetector featureDetector = new FeatureDetector(classLoader);
-        if (featureDetector.isJBossVFSv3Available() && "vfs".equals(protocol)) {
-            JBossVFSv3ClassPathLocationScanner locationScanner = new JBossVFSv3ClassPathLocationScanner();
-            locationScannerCache.put(protocol, locationScanner);
-            resourceNameCache.put(locationScanner, new HashMap<>());
-            return locationScanner;
-        }
         if (featureDetector.isOsgiFrameworkAvailable() && (isFelix(protocol) || isEquinox(protocol))) {
             OsgiClassPathLocationScanner locationScanner = new OsgiClassPathLocationScanner();
             locationScannerCache.put(protocol, locationScanner);
